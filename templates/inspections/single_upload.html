@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Single Inspection{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9 col-xl-8">
+        <!-- Title & Breadcrumb -->
+        <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-camera text-primary me-2"></i>Single Plate Inspection
+                </h3>
+                <p class="text-secondary small mb-0">Upload a single JPEG or PNG image for real-time defect screening.</p>
+            </div>
+            <a href="{% url 'inspections:batch_inspect' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-collection me-1"></i> Switch to Batch Upload
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 p-md-5">
+                <form method="post" enctype="multipart/form-data" id="singleUploadForm">
+                    {% csrf_token %}
+
+                    <!-- Product Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark d-flex justify-content-between">
+                            <span>1. Select Manufactured Product</span>
+                            <span class="text-muted small">Registered in system</span>
+                        </label>
+                        {{ form.product }}
+                        <div class="form-text text-muted small">
+                            Target product framing specification: Centered metal plate against dark border.
+                        </div>
+                    </div>
+
+                    <!-- Drag & Drop Upload Zone -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">2. Choose or Drop Plate Image</label>
+                        <div class="dropzone-box" id="dropZone">
+                            <i class="bi bi-cloud-arrow-up display-4 text-primary mb-2 d-block"></i>
+                            <h5 class="fw-bold mb-1">Drag and drop plate image here</h5>
+                            <p class="text-muted small mb-3">or click to browse from your device</p>
+                            
+                            {{ form.image }}
+                            
+                            <div class="d-flex justify-content-center gap-3 text-secondary fs-xs mt-3">
+                                <span><i class="bi bi-check-circle-fill text-success me-1"></i>JPEG / PNG</span>
+                                <span><i class="bi bi-check-circle-fill text-success me-1"></i>64px to 4096px</span>
+                                <span><i class="bi bi-check-circle-fill text-success me-1"></i>Max 5 MiB</span>
+                            </div>
+                        </div>
+                        <div id="clientValidationAlert" class="alert alert-danger mt-2 d-none" role="alert"></div>
+                    </div>
+
+                    <!-- Live Image Preview Area (shown once file chosen) -->
+                    <div id="previewCard" class="card bg-dark text-white p-3 mb-4 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fs-xs text-uppercase text-secondary fw-bold">Live Image Preview</span>
+                            <span id="previewDetails" class="badge bg-secondary font-mono fs-xs"></span>
+                        </div>
+                        <div class="preview-img-container text-center">
+                            <img id="imagePreview" src="" alt="Selected Plate Preview" class="img-fluid rounded">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <a href="{% url 'inspections:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg px-4 fw-semibold shadow-sm" id="submitBtn">
+                            <i class="bi bi-cpu me-1"></i> Run Model Inference
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Validation Guidelines Card -->
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle text-primary me-2"></i>Validation Protocol &amp; Preprocessing Pipeline</h6>
+                <div class="row g-3 fs-xs text-secondary">
+                    <div class="col-md-4">
+                        <strong class="text-dark d-block mb-1">1. Format &amp; Size Check:</strong>
+                        Decoded JPEG or PNG only. Reject corrupt headers, renamed non-images, or files &gt; 5 MiB.
+                    </div>
+                    <div class="col-md-4">
+                        <strong class="text-dark d-block mb-1">2. Dimension Boundaries:</strong>
+                        Must satisfy 64 &le; width &le; 4096 and 64 &le; height &le; 4096. Reject miniature icons.
+                    </div>
+                    <div class="col-md-4">
+                        <strong class="text-dark d-block mb-1">3. Model Execution:</strong>
+                        Crops centered [16:112, 16:112], extracts 17 statistical features, runs frozen logistic classifier.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('imageFileInput');
+    const dropZone = document.getElementById('dropZone');
+    const previewCard = document.getElementById('previewCard');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewDetails = document.getElementById('previewDetails');
+    const alertBox = document.getElementById('clientValidationAlert');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Drag and drop event handlers
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files.length > 0) {
+            handleFileSelect(this.files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        alertBox.classList.add('d-none');
+        alertBox.textContent = '';
+
+        // Check size <= 5MB
+        const maxBytes = 5 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            alertBox.textContent = `Warning: File size (${(file.size/(1024*1024)).toFixed(2)} MiB) exceeds 5 MiB limit. Backend will reject it.`;
+            alertBox.classList.remove('d-none');
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            const img = new Image();
+            img.onload = function() {
+                previewDetails.textContent = `${file.name} | ${this.width}x${this.height}px | ${(file.size/1024).toFixed(1)} KB`;
+                if (this.width < 64 || this.height < 64) {
+                    alertBox.textContent = `Warning: Image dimension (${this.width}x${this.height}) is below minimum 64x64.`;
+                    alertBox.classList.remove('d-none');
+                }
+            };
+            img.src = e.target.result;
+            previewCard.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}
+

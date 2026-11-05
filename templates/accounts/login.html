@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center py-4">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-header bg-dark text-white text-center py-4 rounded-top-4 border-0">
+                <i class="bi bi-shield-check text-primary display-4 mb-2"></i>
+                <h4 class="fw-bold mb-0">AI Visual Inspection System</h4>
+                <p class="text-secondary small mb-0">Blessed IT Solution &bull; Round 2 Manufacturing QA</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <h5 class="fw-semibold text-dark mb-3">Sign in to your account</h5>
+
+                <form method="post" action="{% url 'accounts:login' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                            {{ form.username }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-secondary small fw-bold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-muted"></i></span>
+                            {{ form.password }}
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg fw-semibold shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                        </button>
+                    </div>
+                </form>
+
+                <div class="border-top pt-4 mt-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="text-uppercase text-muted fw-bold fs-xs">Fast Demo Accounts (1-Click Login)</span>
+                        <span class="badge bg-light text-muted border">Evaluator Ready</span>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <form method="post" action="{% url 'accounts:demo_login' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="role" value="engineer">
+                                <button type="submit" class="btn btn-outline-info w-100 text-start d-flex justify-content-between align-items-center py-2">
+                                    <div>
+                                        <i class="bi bi-person-badge me-2 text-info"></i>
+                                        <span class="fw-bold text-dark">Quality Engineer</span>
+                                        <span class="text-muted small ms-2">(Uploads &amp; View Own Batches)</span>
+                                    </div>
+                                    <span class="badge bg-info text-dark">engineer</span>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-12">
+                            <form method="post" action="{% url 'accounts:demo_login' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="role" value="supervisor">
+                                <button type="submit" class="btn btn-outline-warning w-100 text-start d-flex justify-content-between align-items-center py-2">
+                                    <div>
+                                        <i class="bi bi-patch-check me-2 text-warning"></i>
+                                        <span class="fw-bold text-dark">Inspection Supervisor</span>
+                                        <span class="text-muted small ms-2">(Reviews &amp; Audits History)</span>
+                                    </div>
+                                    <span class="badge bg-warning text-dark">supervisor</span>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-12">
+                            <form method="post" action="{% url 'accounts:demo_login' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="role" value="admin">
+                                <button type="submit" class="btn btn-outline-danger w-100 text-start d-flex justify-content-between align-items-center py-2">
+                                    <div>
+                                        <i class="bi bi-shield-lock me-2 text-danger"></i>
+                                        <span class="fw-bold text-dark">Administrator</span>
+                                        <span class="text-muted small ms-2">(Product &amp; System Manager)</span>
+                                    </div>
+                                    <span class="badge bg-danger">admin</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <span class="text-muted small">Need an account? </span>
+                    <a href="{% url 'accounts:register' %}" class="fw-semibold text-primary small text-decoration-none">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

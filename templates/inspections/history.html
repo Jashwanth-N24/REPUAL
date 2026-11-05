@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Inspection History{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-clock-history text-primary me-2"></i>Inspection History &amp; Audits
+                </h3>
+                <p class="text-secondary small mb-0">
+                    {% if user.is_supervisor_role %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-eye-fill me-1"></i>Supervisor View</span> Showing all team inspections across plant lines.
+                    {% else %}
+                        <span class="badge bg-info text-dark"><i class="bi bi-person-fill me-1"></i>Engineer View</span> Showing your submitted inspections only.
+                    {% endif %}
+                    &bull; {{ total_filtered }} records matching filters.
+                </p>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="{% url 'inspections:single_inspect' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-camera me-1"></i> New Inspection
+                </a>
+                <a href="{% url 'inspections:batch_inspect' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-collection me-1"></i> Batch Upload
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Controls Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-3">
+                <form method="get" class="row g-2 align-items-center">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fs-xs text-muted mb-1 fw-bold">Prediction Filter</label>
+                        {{ filter_form.prediction }}
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fs-xs text-muted mb-1 fw-bold">Review Status</label>
+                        {{ filter_form.review_status }}
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label fs-xs text-muted mb-1 fw-bold">Process Status</label>
+                        {{ filter_form.status }}
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fs-xs text-muted mb-1 fw-bold">Search</label>
+                        {{ filter_form.q }}
+                    </div>
+                    <div class="col-12 col-md-1 d-flex align-items-end pt-3">
+                        <button type="submit" class="btn btn-dark btn-sm w-100" title="Apply Filters">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Inspection Table Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light fs-xs text-uppercase">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Sample Preview</th>
+                                <th>Product / File</th>
+                                <th>Submitter</th>
+                                <th>Status</th>
+                                <th>Model Prediction</th>
+                                <th>Confidence</th>
+                                <th>Supervisor Review</th>
+                                <th>Logged At</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in page_obj %}
+                            <tr>
+                                <td class="font-mono fs-xs text-muted">{{ item.id }}</td>
+                                <td>
+                                    {% if item.image %}
+                                        <a href="{% url 'inspections:detail' pk=item.id %}">
+                                            <img src="{{ item.image.url }}" alt="Plate preview" class="rounded border shadow-sm" style="width: 48px; height: 48px; object-fit: cover;" onerror="this.hidden=true;this.nextElementSibling.classList.remove('d-none');">
+                                            <span class="inspection-image-fallback d-none" aria-label="Preview unavailable"><i class="bi bi-image"></i></span>
+                                        </a>
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-truncate" style="max-width: 200px;" title="{{ item.original_filename }}">
+                                        {{ item.original_filename }}
+                                    </div>
+                                    <span class="badge bg-secondary font-mono fs-xs">{{ item.product.product_id }}</span>
+                                    {% if item.batch %}
+                                        <a href="{% url 'inspections:batch_detail' batch_id=item.batch.batch_id %}" class="badge bg-light text-muted border text-decoration-none">
+                                            Batch #{{ item.batch.batch_id|stringformat:".6s" }}
+                                        </a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="small fw-semibold text-dark">{{ item.submitter.username }}</span>
+                                </td>
+                                <td>
+                                    {% if item.status == 'completed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Completed</span>
+                                    {% elif item.status == 'failed' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" title="{{ item.failure_reason }}">Rejected</span>
+                                    {% elif item.status == 'processing' %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Processing</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border">Queued</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.original_predicted_class == 'Defective' %}
+                                        <span class="badge bg-danger text-white fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>Defective</span>
+                                    {% elif item.original_predicted_class == 'Normal' %}
+                                        <span class="badge bg-success text-white fw-bold"><i class="bi bi-check-circle me-1"></i>Normal</span>
+                                    {% else %}
+                                        <span class="text-muted small">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td class="font-mono fs-xs">
+                                    {% if item.confidence is not None %}
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span>{{ item.confidence|floatformat:2 }}</span>
+                                            <small class="text-muted">({{ item.defect_probability|floatformat:2 }} def)</small>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.review_status == 'confirmed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success" title="Confirmed by {{ item.reviewer.username }}">
+                                            <i class="bi bi-check2-all me-1"></i>Confirmed
+                                        </span>
+                                        <div class="fs-xs text-muted mt-1">{{ item.reviewer.username }}</div>
+                                    {% elif item.review_status == 'corrected' %}
+                                        <span class="badge bg-warning-subtle text-dark border border-warning" title="Corrected to {{ item.reviewed_class }} by {{ item.reviewer.username }}">
+                                            <i class="bi bi-pencil-square me-1"></i>Corrected &rarr; {{ item.reviewed_class }}
+                                        </span>
+                                        <div class="fs-xs text-muted mt-1">{{ item.reviewer.username }}</div>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">Pending Review</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fs-xs text-muted">
+                                    {{ item.created_at|date:"M d, H:i" }}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex gap-1 justify-content-end align-items-center">
+                                        {% if item.quality_incident %}
+                                            <a href="{% url 'incidents:detail' incident_id=item.quality_incident.incident_id %}" class="btn btn-outline-danger btn-sm" title="View Quality Incident #{{ item.quality_incident.incident_id|stringformat:'.8s' }}">
+                                                <i class="bi bi-clipboard2-pulse"></i>
+                                            </a>
+                                        {% elif user.role == 'engineer' and item.original_predicted_class == 'Defective' and item.status == 'completed' and item.submitter == user %}
+                                            <form method="post" action="{% url 'incidents:create' inspection_id=item.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Create Quality Incident">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        <a href="{% url 'inspections:detail' pk=item.id %}" class="btn btn-outline-primary btn-sm">
+                                            {% if user.is_supervisor_role and item.status == 'completed' and item.review_status == 'pending' %}
+                                                <i class="bi bi-pencil-square me-1"></i>Review
+                                            {% else %}
+                                                View
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search display-6 d-block mb-2 text-secondary"></i>
+                                    No inspections found matching your filter criteria.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Bar -->
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="fs-xs text-muted">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.prediction %}&prediction={{ request.GET.prediction }}{% endif %}{% if request.GET.review_status %}&review_status={{ request.GET.review_status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.prediction %}&prediction={{ request.GET.prediction }}{% endif %}{% if request.GET.review_status %}&review_status={{ request.GET.review_status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

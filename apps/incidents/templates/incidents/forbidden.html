@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Access restricted{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="card border-0 shadow-sm mx-auto text-center p-4" style="max-width: 600px;">
+        <div class="text-warning mb-2"><i class="bi bi-shield-lock display-5"></i></div>
+        <h1 class="h4 fw-bold">Quality incident access is restricted</h1>
+        <p class="text-muted mb-3">This area is available to Quality Engineers and Supervisors under their assigned permissions.</p>
+        <a class="btn btn-primary align-self-center" href="/">Return to MRIT workspace</a>
+    </div>
+</div>
+{% endblock %}

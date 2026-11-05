@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRIT 3.O | Manufacturing Workspace</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bs-body-font-family: 'Plus Jakarta Sans', sans-serif;
+            --pastel-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --primary-soft: #e0f2fe;
+            --primary-color: #0284c7;
+            --accent-green: #d1fae5;
+            --text-main: #334155;
+            --sidebar-bg: #1e293b;
+        }
+
+        body {
+            background-color: var(--pastel-bg);
+            color: var(--text-main);
+            font-family: var(--bs-body-font-family);
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            min-height: 100vh;
+            background: var(--sidebar-bg);
+            color: #cbd5e1;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+        }
+        .sidebar h4 {
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .sidebar .form-select {
+            background-color: #334155;
+            color: #ffffff;
+            border-color: #475569;
+        }
+
+        /* Card Customizations */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs .nav-link {
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary-soft);
+            color: var(--primary-color);
+        }
+        .nav-tabs {
+            border-bottom: none;
+            gap: 8px;
+        }
+
+        /* Chat Container & Bubbles */
+        .chat-container {
+            height: 440px;
+            overflow-y: auto;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .message-bubble {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            max-width: 75%;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .user-msg {
+            background: #e0f2fe;
+            color: #0369a1;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+        .assistant-msg {
+            background: #ffffff;
+            color: #334155;
+            margin-right: auto;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .citation-badge {
+            font-size: 0.75rem;
+            background: #f8fafc;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            text-decoration: none;
+        }
+        .citation-badge:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+            border-color: #94a3b8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+        .demo-chip {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .demo-chip:hover:not(:disabled) {
+            background-color: #eef2ff;
+            border-color: #6366f1;
+            color: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(99, 102, 241, 0.15);
+        }
+        .demo-chip:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .demo-chip i {
+            margin-right: 6px;
+        }
+
+        /* Form Controls */
+        .form-control, .form-select {
+            border-radius: 8px;
+            border-color: #cbd5e1;
+            padding: 10px 14px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        /* Custom Badges */
+        .status-badge-answered {
+            background-color: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+        .status-badge-insufficient {
+            background-color: #fef9c3;
+            color: #854d0e;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+        .status-badge-security {
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .table-danger-soft {
+            background-color: #fff1f2 !important;
+        }
+
+        /* Confidence Badges */
+        .conf-badge-high {
+            background-color: #d1fae5;
+            color: #065f46;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .conf-badge-moderate {
+            background-color: #fef3c7;
+            color: #92400e;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .conf-badge-low {
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3 col-lg-2 sidebar p-4 d-flex flex-column justify-content-between">
+            <div>
+                <!-- Top Brand Header with Left-Top Logout Button -->
+                <div class="d-flex align-items-center justify-content-between mb-4 pt-1">
+                    <div>
+                        <h4 class="mb-0 text-white fw-bolder" style="letter-spacing: -0.6px; font-weight: 800; font-size: 1.45rem;">
+                            MRIT <span style="color: #38bdf8;">3.O</span>
+                        </h4>
+                    </div>
+                    <a href="/logout/" class="btn btn-danger btn-sm py-1 px-2 fw-semibold shadow-sm" id="topLogoutBtn" title="Sign Out / Logout" style="font-size: 0.78rem;">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+
+                
+                <hr class="border-secondary mb-4">
+
+                <!-- Active User Card -->
+                <div class="mb-4">
+                    <label class="form-label text-uppercase small text-secondary fw-bold">Signed In As</label>
+                    <div id="activeUserRoleDisplay" class="p-3 rounded bg-dark text-white fw-semibold small border border-secondary mb-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-user-circle me-1 text-info"></i> {{ user.username }}</span>
+                            <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'supervisor' %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+                                {{ user.role|upper }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+                        <span class="text-success small fw-semibold"><i class="fas fa-circle-check me-1"></i>Session Active</span>
+                        <a href="/logout/" class="text-danger small text-decoration-none fw-semibold">
+                            <i class="fas fa-sign-out-alt me-1"></i> Sign Out
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-uppercase small text-secondary fw-bold">Target Machine</label>
+                    <select id="machineSelector" class="form-select">
+                        <option value="M-HP200">M-HP200 (Hydraulic Press)</option>
+                        <option value="M-AC90">M-AC90 (Air Compressor)</option>
+                    </select>
+                </div>
+                <a href="/quality/" class="btn btn-outline-info w-100 text-start fw-semibold">
+                    <i class="fas fa-magnifying-glass-chart me-2"></i>Visual Quality Inspection
+                </a>
+                {% if user.role == 'engineer' or user.role == 'supervisor' %}
+                <a href="/quality/incidents/" class="btn btn-outline-light w-100 text-start fw-semibold mt-2">
+                    <i class="fas fa-clipboard-check me-2"></i>Quality Incidents
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="text-secondary small pt-3 border-top border-secondary">
+                <p class="mb-1 fw-bold text-white" style="letter-spacing: -0.3px;">MRIT Manufacturing Suite</p>
+                <p class="mb-0">Manuals and quality in one workspace</p>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-md-9 col-lg-10 p-4 p-md-5">
+            {% if login_welcome %}
+            <!-- Welcome Alert on Login -->
+            <div id="loginWelcomeBanner" class="alert alert-success alert-dismissible fade show border-0 shadow-sm py-3 px-4 mb-4 rounded-3 d-flex align-items-center justify-content-between" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-hand-wave fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">{{ login_welcome }}</h5>
+                        <small class="text-secondary">Logged in successfully as <strong>{{ user.username }}</strong> &bull; Role permissions active.</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: #1e293b;">Welcome, {{ user.role|title }}!</h2>
+                    <p class="text-muted mb-0">Role: <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'supervisor' %}bg-warning text-dark{% else %}bg-primary{% endif %} text-uppercase">{{ user.role }}</span> &bull; Operator: <strong>{{ user.username }}</strong></p>
+                </div>
+                <div class="d-flex align-items-center bg-white px-3 py-2 rounded-pill border shadow-sm">
+                    <span class="text-success me-2">&#9679;</span>
+                    <span class="fw-semibold small">System Operational</span>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs mb-4" id="appTabs" role="tablist">
+                {% if user.role == 'supervisor' %}
+                <li class="nav-item" id="chatTabItem">
+                    <button class="nav-link disabled" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chatPanel" type="button" tabindex="-1" aria-disabled="true" title="Locked: Restricted to Plant Engineers">
+                        <i class="fas fa-robot me-2"></i>Assistant Chat <span class="badge bg-secondary ms-1 small"><i class="fas fa-lock"></i> Locked</span>
+                    </button>
+                </li>
+                {% else %}
+                <li class="nav-item" id="chatTabItem">
+                    <button class="nav-link {% if user.role == 'engineer' %}active{% endif %}" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chatPanel" type="button">
+                        <i class="fas fa-robot me-2"></i>Assistant Chat
+                    </button>
+                </li>
+                {% endif %}
+                <li class="nav-item" id="uploadTabItem">
+                    <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#uploadPanel" type="button">
+                        <i class="fas fa-file-upload me-2"></i>Manual Management <span id="uploadLockBadge" class="badge bg-secondary ms-1 small" style="display:none;"><i class="fas fa-lock"></i> Admin</span>
+                    </button>
+                </li>
+                <li class="nav-item" id="auditTabItem">
+                    <button class="nav-link {% if user.role == 'supervisor' %}active{% endif %}" id="audit-tab" data-bs-toggle="tab" data-bs-target="#auditPanel" type="button">
+                        <i class="fas fa-shield-alt me-2"></i>Audit & History Logs <span id="auditLockBadge" class="badge bg-secondary ms-1 small" style="display:none;"><i class="fas fa-lock"></i> Supervisor</span>
+                    </button>
+                </li>
+                {% if user.role == 'admin' or user.is_superuser %}
+                <li class="nav-item" id="adminTabItem">
+                    <button class="nav-link active" id="admin-tab" data-bs-toggle="tab" data-bs-target="#adminPanel" type="button">
+                        <i class="fas fa-user-shield me-2 text-danger"></i>Admin Portal <span class="badge bg-danger ms-1 small">Admin Only</span>
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="appTabContent">
+                <!-- Chat Panel -->
+                <div class="tab-pane fade {% if user.role == 'engineer' %}show active{% endif %}" id="chatPanel" role="tabpanel">
+                    <div class="card border-0">
+                        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-comments text-info me-2"></i>Isolated RAG Session</h6>
+                                <small class="text-muted">Target Context: <span id="currentMachineLabel" class="fw-semibold text-primary">M-HP200</span></small>
+                            </div>
+                            <span class="badge bg-light text-secondary border"><i class="fas fa-shield-alt text-success me-1"></i>Cross-contamination Shield: ON</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div id="aiAccessRevocationBanner" style="display: none;" class="alert alert-danger py-3 px-4 mb-3 rounded-3 shadow-sm">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-danger text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="fas fa-ban fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">AI Assistant Access Cancelled</h6>
+                                        <small>Your access to the Assistant AI has been cancelled by the Administrator. Contact your system supervisor if you believe this is an error.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-container mb-3 p-3" id="chatHistory">
+                                <div class="message-bubble assistant-msg">
+                                    <div class="fw-bold mb-1 text-primary"><i class="fas fa-robot me-1"></i> MRIT Manual Assistant</div>
+                                    Hello {{ user.username }}! Select your target machine on the sidebar and enter your operational or maintenance query below. All searches are strictly restricted to the selected equipment's manuals.
+                                </div>
+                            </div>
+                            <!-- Suggested Demo Questions -->
+                            <div class="mb-3 px-1" id="demoQuestionsContainer">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="small fw-bold text-secondary text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                        <i class="fas fa-lightbulb text-warning me-1"></i> Quick Demo Questions:
+                                    </span>
+                                    <span class="badge bg-light text-muted border small" style="font-size: 0.68rem;">7 Verified Queries</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn demo-chip" onclick="askDemoQuestion('What is error code E17 and what is the documented response?', 'M-HP200')">
+                                        <i class="fas fa-exclamation-triangle text-danger"></i> E17 Alarm & Response
+                                    </button>
+                                    <button type="button" class="btn demo-chip" onclick="askDemoQuestion('What is normal hydraulic pressure during forming?', 'M-HP200')">
+                                        <i class="fas fa-tachometer-alt text-primary"></i> Normal Hydraulic Pressure
+                                    </button>
+                                    <button type="button" class="btn demo-chip" onclick="askDemoQuestion('What action is required when oil temperature exceeds 60°C (E24)?', 'M-HP200')">
+                                        <i class="fas fa-temperature-high text-warning"></i> High Oil Temp (E24)
+                                    </button>
+                                    <button type="button" class="btn demo-chip" onclick="askDemoQuestion('What observations must be collected for repeated low pressure?', 'M-HP200')">
+                                        <i class="fas fa-tools text-secondary"></i> Low Pressure Troubleshooting
+                                    </button>
+                                    <button type="button" class="btn demo-chip" onclick="askDemoQuestion('What does alarm code E42 mean for return-filter restriction?', 'M-HP200')">
+                                        <i class="fas fa-filter text-info"></i> Return-Filter Restriction (E42)
+                                    </button>
+                                    <button type="button" class="btn demo-chip" onclick="askDemoQuestion('What are the daily pre-cycle checks before each shift?', 'M-HP200')">
+                                        <i class="fas fa-clipboard-check text-success"></i> Pre-cycle Shift Checks
+                                    </button>
+                                    <button type="button" class="btn demo-chip" onclick="askDemoQuestion('What does alarm E17 mean on AC-90 air compressor?', 'M-AC90')">
+                                        <i class="fas fa-wind" style="color: #0d9488;"></i> AC-90 Discharge Temp (E17)
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <input type="text" id="questionInput" class="form-control form-control-lg" placeholder="Ask e.g., What does E17 mean? or How often should filters be inspected?">
+                                <button class="btn btn-primary px-4" type="button" id="sendBtn">
+                                    <i class="fas fa-paper-plane me-1"></i> Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Panel (Admin Only) -->
+                <div class="tab-pane fade" id="uploadPanel" role="tabpanel">
+                    <div class="card border-0">
+                        <div class="card-header bg-white py-3 px-4 border-bottom">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-cloud-upload-alt text-success me-2"></i>Upload New Equipment Manual</h5>
+                            <small class="text-muted">Restricted to Administrator Role</small>
+                        </div>
+                        <div class="card-body p-4">
+                            <div id="uploadAlert"></div>
+                            <form id="uploadForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Target Machine</label>
+                                        <select name="machine" id="uploadMachine" class="form-select">
+                                            <option value="1">M-HP200 (Hydraulic Press)</option>
+                                            <option value="2">M-AC90 (Air Compressor)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Document ID</label>
+                                        <input type="text" name="document_id" class="form-control" placeholder="e.g., HP-OPS-03" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Manual Title</label>
+                                        <input type="text" name="title" class="form-control" placeholder="e.g., Advanced Troubleshooting Guide" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Revision Version</label>
+                                        <input type="text" name="revision" class="form-control" value="1.0" required>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">PDF File Attachment</label>
+                                    <input type="file" name="pdf_file" class="form-control" accept=".pdf" required>
+                                </div>
+                                <button type="submit" class="btn btn-success px-4 fw-semibold">
+                                    <i class="fas fa-upload me-2"></i> Ingest & Register Manual
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Log Panel (Supervisor / Admin) -->
+                <div class="tab-pane fade {% if user.role == 'supervisor' %}show active{% endif %}" id="auditPanel" role="tabpanel">
+                    <div class="card border-0">
+                        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-clipboard-list text-primary me-2"></i>Query Audit & Compliance Logs</h5>
+                                <small class="text-muted">Real-time tracking of queries, citations, confidence scores, and security alerts</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary px-3" id="refreshLogsBtn">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh Logs
+                            </button>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light text-uppercase fs-7">
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>User Role</th>
+                                            <th>Machine Code</th>
+                                            <th>Query Asked</th>
+                                            <th>Confidence</th>
+                                            <th>Status</th>
+                                            <th>Citations Referenced</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditTableBody">
+                                        <!-- Dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if user.role == 'admin' or user.is_superuser %}
+                <!-- Admin Control Portal (Admin Only) -->
+                <div class="tab-pane fade {% if user.role == 'admin' %}show active{% endif %}" id="adminPanel" role="tabpanel">
+                    <!-- KPI Cards Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm p-3 bg-white">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Total Machines</small>
+                                        <h3 class="fw-bold mb-0 text-dark" id="adminKpiMachines">-</h3>
+                                    </div>
+                                    <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                                        <i class="fas fa-industry fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm p-3 bg-white">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Manuals Ingested</small>
+                                        <h3 class="fw-bold mb-0 text-dark" id="adminKpiManuals">-</h3>
+                                    </div>
+                                    <div class="bg-success-subtle text-success p-3 rounded-circle">
+                                        <i class="fas fa-book fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm p-3 bg-white">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Total RAG Queries</small>
+                                        <h3 class="fw-bold mb-0 text-dark" id="adminKpiQueries">-</h3>
+                                    </div>
+                                    <div class="bg-info-subtle text-info p-3 rounded-circle">
+                                        <i class="fas fa-comments fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm p-3 bg-white">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Security Alerts</small>
+                                        <h3 class="fw-bold mb-0 text-danger" id="adminKpiViolations">-</h3>
+                                    </div>
+                                    <div class="bg-danger-subtle text-danger p-3 rounded-circle">
+                                        <i class="fas fa-shield-virus fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row: User Management + Machine Registration -->
+                    <div class="row g-4 mb-4">
+                        <!-- User Role Management Table with Add User Form -->
+                        <div class="col-lg-7">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-users-cog text-primary me-2"></i>Plant Users & Access Control</h6>
+                                        <small class="text-muted">Manage credentials, roles, and Assistant AI access</small>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#addUserCollapse">
+                                            <i class="fas fa-user-plus me-1"></i> Add User
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary" id="refreshAdminBtn" title="Reload admin overview">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div id="userUpdateAlert"></div>
+
+                                    <!-- Collapsible Add User Form -->
+                                    <div class="collapse mb-3" id="addUserCollapse">
+                                        <div class="p-3 bg-light rounded-3 border">
+                                            <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-user-plus text-success me-1"></i>Create New Plant User</h6>
+                                            <form id="newAdminUserForm">
+                                                <div class="row g-2 mb-2">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-semibold text-secondary mb-1">Username *</label>
+                                                        <input type="text" id="addUsername" class="form-control form-control-sm" placeholder="e.g. jsmith" required>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-semibold text-secondary mb-1">Password *</label>
+                                                        <input type="password" id="addPassword" class="form-control form-control-sm" placeholder="Initial password" required>
+                                                    </div>
+                                                </div>
+                                                <div class="row g-2 mb-2">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-semibold text-secondary mb-1">Email (Optional)</label>
+                                                        <input type="email" id="addEmail" class="form-control form-control-sm" placeholder="user@company.com">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-semibold text-secondary mb-1">Plant Role</label>
+                                                        <select id="addRole" class="form-select form-select-sm">
+                                                            <option value="engineer" selected>Engineer</option>
+                                                            <option value="supervisor">Supervisor</option>
+                                                            <option value="admin">Administrator</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between pt-2">
+                                                    <div class="form-check form-switch mb-0">
+                                                        <input class="form-check-input" type="checkbox" id="addAiAccess" checked>
+                                                        <label class="form-check-label small fw-semibold" for="addAiAccess">Grant Assistant AI Access</label>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold">
+                                                        <i class="fas fa-check me-1"></i> Save User
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light fs-7 text-uppercase">
+                                                <tr>
+                                                    <th>User</th>
+                                                    <th>Role</th>
+                                                    <th>AI Access</th>
+                                                    <th>Change Role</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="adminUsersTableBody">
+                                                <!-- Populated dynamically via JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Register New Equipment Machine -->
+                        <div class="col-lg-5">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white py-3 px-4 border-bottom">
+                                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-plus-circle text-success me-2"></i>Register New Equipment</h6>
+                                    <small class="text-muted">Add new isolated machine to the plant</small>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div id="machineAlert"></div>
+                                    <form id="newMachineForm">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-uppercase text-secondary">Machine ID Code</label>
+                                            <input type="text" name="machine_id" id="newMachineId" class="form-control" placeholder="e.g. M-CNC50, M-ROBOT01" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-uppercase text-secondary">Equipment Name</label>
+                                            <input type="text" name="name" id="newMachineName" class="form-control" placeholder="e.g. 5-Axis CNC Milling Center" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-uppercase text-secondary">Description</label>
+                                            <textarea name="description" id="newMachineDesc" class="form-control" rows="2" placeholder="e.g. High-precision manufacturing unit"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                                            <i class="fas fa-plus me-1"></i> Save & Register Machine
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row: Equipment Manuals Catalog & Security Breaches -->
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white py-3 px-4 border-bottom">
+                                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-file-contract text-secondary me-2"></i>Active Equipment Manuals Catalog</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead class="table-light fs-7 text-uppercase">
+                                                <tr>
+                                                    <th>Doc ID</th>
+                                                    <th>Title</th>
+                                                    <th>Machine</th>
+                                                    <th>Rev</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="adminManualsTableBody">
+                                                <!-- Dynamic -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white py-3 px-4 border-bottom">
+                                    <h6 class="mb-0 fw-bold text-danger"><i class="fas fa-shield-virus me-2"></i>Security Flags & Interceptions</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead class="table-light fs-7 text-uppercase">
+                                                <tr>
+                                                    <th>Time</th>
+                                                    <th>User</th>
+                                                    <th>Target</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="adminViolationsTableBody">
+                                                <!-- Dynamic -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const machineSelector = document.getElementById('machineSelector');
+    const currentMachineLabel = document.getElementById('currentMachineLabel');
+    const questionInput = document.getElementById('questionInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatHistory = document.getElementById('chatHistory');
+    const uploadTabBtn = document.getElementById('upload-tab');
+    const auditTabBtn = document.getElementById('audit-tab');
+    const uploadLockBadge = document.getElementById('uploadLockBadge');
+    const auditLockBadge = document.getElementById('auditLockBadge');
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken') || '';
+
+    function getConfidenceBadge(score) {
+        if (score === null || score === undefined) return '<span class="text-muted small">N/A</span>';
+        const num = parseFloat(score);
+        if (num >= 90) {
+            return `<span class="conf-badge-high"><i class="fas fa-check-circle"></i> ${num.toFixed(1)}% High</span>`;
+        } else if (num >= 70) {
+            return `<span class="conf-badge-moderate"><i class="fas fa-info-circle"></i> ${num.toFixed(1)}% Moderate</span>`;
+        } else {
+            return `<span class="conf-badge-low"><i class="fas fa-exclamation-triangle"></i> ${num.toFixed(1)}% Low</span>`;
+        }
+    }
+
+    function applyUserRole(username, role, has_ai_access, is_superuser) {
+        const adminTabItem = document.getElementById('adminTabItem');
+        const chatTabItem = document.getElementById('chatTabItem');
+        const aiBanner = document.getElementById('aiAccessRevocationBanner');
+        const questionInput = document.getElementById('questionInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        if (role === 'engineer') {
+            uploadTabBtn.classList.add('disabled');
+            uploadTabBtn.setAttribute('title', 'Restricted to Administrator');
+            uploadLockBadge.style.display = 'inline-block';
+
+            auditTabBtn.classList.add('disabled');
+            auditTabBtn.setAttribute('title', 'Restricted to Supervisor/Administrator');
+            auditLockBadge.style.display = 'inline-block';
+
+            if (adminTabItem) adminTabItem.style.display = 'none';
+            if (chatTabItem) chatTabItem.style.display = 'block';
+
+            // Check if AI access was cancelled
+            if (has_ai_access === false) {
+                if (aiBanner) aiBanner.style.display = 'block';
+                if (questionInput) {
+                    questionInput.disabled = true;
+                    questionInput.placeholder = "AI Assistant access has been cancelled by Administrator.";
+                }
+                if (sendBtn) sendBtn.disabled = true;
+            } else {
+                if (aiBanner) aiBanner.style.display = 'none';
+                if (questionInput) questionInput.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
+            }
+
+            const chatTab = new bootstrap.Tab(document.getElementById('chat-tab'));
+            chatTab.show();
+        } else if (role === 'supervisor') {
+            uploadTabBtn.classList.add('disabled');
+            uploadTabBtn.setAttribute('title', 'Restricted to Administrator');
+            uploadLockBadge.style.display = 'inline-block';
+
+            auditTabBtn.classList.remove('disabled');
+            auditTabBtn.removeAttribute('title');
+            auditLockBadge.style.display = 'none';
+
+            if (adminTabItem) adminTabItem.style.display = 'none';
+
+            // Lock Assistant AI for Supervisor
+            const chatTabBtn = document.getElementById('chat-tab');
+            if (chatTabBtn) {
+                chatTabBtn.classList.add('disabled');
+                chatTabBtn.setAttribute('title', 'Locked: Restricted to Plant Engineers');
+            }
+
+            if (aiBanner) {
+                aiBanner.className = "alert alert-warning py-3 px-4 mb-3 rounded-3 shadow-sm";
+                aiBanner.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning text-dark rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="fas fa-lock fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">AI Assistant Locked</h6>
+                            <small>Access to Assistant AI is restricted to Plant Engineers. Supervisors monitor audit, compliance, and security logs.</small>
+                        </div>
+                    </div>`;
+                aiBanner.style.display = 'block';
+            }
+            if (questionInput) {
+                questionInput.disabled = true;
+                questionInput.placeholder = "AI Assistant is locked for Supervisor role.";
+            }
+            if (sendBtn) sendBtn.disabled = true;
+
+            const auditTab = new bootstrap.Tab(document.getElementById('audit-tab'));
+            auditTab.show();
+            loadAuditLogs();
+        } else if (role === 'admin' || is_superuser) {
+            if (chatTabItem) chatTabItem.style.display = 'block';
+            const chatTabBtn = document.getElementById('chat-tab');
+            if (chatTabBtn) {
+                chatTabBtn.classList.remove('disabled');
+                chatTabBtn.removeAttribute('title');
+            }
+
+            // Check if AI access was cancelled
+            if (has_ai_access === false) {
+                if (aiBanner) aiBanner.style.display = 'block';
+                if (questionInput) {
+                    questionInput.disabled = true;
+                    questionInput.placeholder = "AI Assistant access has been cancelled by Administrator.";
+                }
+                if (sendBtn) sendBtn.disabled = true;
+            } else {
+                if (aiBanner) aiBanner.style.display = 'none';
+                if (questionInput) {
+                    questionInput.disabled = false;
+                    questionInput.placeholder = "Ask a question about the selected machine (e.g., 'What is error code E17?')...";
+                }
+                if (sendBtn) sendBtn.disabled = false;
+            }
+
+            uploadTabBtn.classList.remove('disabled');
+            uploadTabBtn.removeAttribute('title');
+            uploadLockBadge.style.display = 'none';
+
+            auditTabBtn.classList.remove('disabled');
+            auditTabBtn.removeAttribute('title');
+            auditLockBadge.style.display = 'none';
+
+            if (adminTabItem) {
+                adminTabItem.style.display = 'block';
+                const adminTab = new bootstrap.Tab(document.getElementById('admin-tab'));
+                adminTab.show();
+            }
+            loadAuditLogs();
+            loadAdminOverview();
+        }
+
+        const demoBtns = document.querySelectorAll('.demo-chip');
+        if (has_ai_access === false || role === 'supervisor') {
+            demoBtns.forEach(btn => btn.disabled = true);
+        } else {
+            demoBtns.forEach(btn => btn.disabled = false);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const res = await fetch('/api/current-user/');
+            if (res.ok) {
+                const userData = await res.json();
+                applyUserRole(userData.username, userData.role, userData.has_ai_access, userData.is_superuser);
+            } else {
+                window.location.href = '/login/?next=/';
+            }
+        } catch (e) {
+            window.location.href = '/login/?next=/';
+        }
+
+        loadMachines();
+    });
+
+    async function loadMachines() {
+        try {
+            const res = await fetch('/api/machines/');
+            if (res.ok) {
+                const machines = await res.json();
+                if (machines && machines.length > 0) {
+                    machineSelector.innerHTML = '';
+                    const uploadMachine = document.getElementById('uploadMachine');
+                    if (uploadMachine) uploadMachine.innerHTML = '';
+                    machines.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.machine_id;
+                        opt.textContent = `${m.machine_id} (${m.name})`;
+                        machineSelector.appendChild(opt);
+
+                        if (uploadMachine) {
+                            const uOpt = document.createElement('option');
+                            uOpt.value = m.id;
+                            uOpt.textContent = `${m.machine_id} (${m.name})`;
+                            uploadMachine.appendChild(uOpt);
+                        }
+                    });
+                    currentMachineLabel.innerText = machineSelector.value;
+                }
+            }
+        } catch (e) {
+            console.warn('Machines auto-fetch skipped', e);
+        }
+    }
+
+    machineSelector.addEventListener('change', () => {
+        currentMachineLabel.innerText = machineSelector.value;
+    });
+
+    sendBtn.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendQuestion();
+    });
+
+    function askDemoQuestion(questionText, targetMachine) {
+        const qInput = document.getElementById('questionInput');
+        if (qInput && qInput.disabled) return;
+
+        if (targetMachine) {
+            const mSelector = document.getElementById('machineSelector');
+            const mLabel = document.getElementById('currentMachineLabel');
+            if (mSelector) {
+                mSelector.value = targetMachine;
+                if (mLabel) mLabel.innerText = targetMachine;
+            }
+        }
+
+        if (qInput) {
+            qInput.value = questionText;
+        }
+        sendQuestion();
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        const machine_id = machineSelector.value;
+        if (!question) return;
+
+        chatHistory.innerHTML += `
+            <div class="message-bubble user-msg">
+                <div class="fw-semibold mb-1 text-info-emphasis">You</div>
+                ${question}
+            </div>`;
+        questionInput.value = '';
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+            const response = await fetch('/api/assistant/ask/', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ machine_id, question })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                let citationsHtml = '';
+                if (data.source_references && data.source_references.length > 0) {
+                    citationsHtml = '<div class="mt-3 pt-2 border-top d-flex flex-wrap gap-2 align-items-center"><small class="text-muted fw-semibold me-1"><i class="fas fa-book-open text-primary me-1"></i>Sources:</small>';
+                    data.source_references.forEach(src => {
+                        const targetUrl = src.pdf_url ? `${src.pdf_url}#page=${src.page_number}` : '#';
+                        citationsHtml += `
+                            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="citation-badge" title="Open ${src.document_id} at Page ${src.page_number} in new tab">
+                                <i class="fas fa-file-pdf text-danger me-1"></i>${src.document_id} (Rev ${src.revision}), Page ${src.page_number}
+                                <i class="fas fa-external-link-alt ms-1 text-muted small" style="font-size: 0.65rem;"></i>
+                            </a>`;
+                    });
+                    citationsHtml += '</div>';
+                }
+
+                let statusBadge = '';
+                if (data.status === 'security_blocked' || data.security_flag) {
+                    statusBadge = '<span class="status-badge-security"><i class="fas fa-shield-virus me-1"></i>Security Blocked</span>';
+                } else if (data.status === 'answered') {
+                    statusBadge = '<span class="status-badge-answered">Answered</span>';
+                } else {
+                    statusBadge = '<span class="status-badge-insufficient">Insufficient Evidence</span>';
+                }
+
+                chatHistory.innerHTML += `
+                    <div class="message-bubble assistant-msg w-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-dark"><i class="fas fa-robot text-primary me-1"></i> MRIT Manual Assistant <code class="ms-1 text-muted">(${data.machine_code})</code></span>
+                            <div class="d-flex align-items-center gap-2">
+                                ${getConfidenceBadge(data.confidence_score)}
+                                ${statusBadge}
+                            </div>
+                        </div>
+                        <p class="mb-2 text-secondary" style="white-space: pre-wrap;">${data.answer}</p>
+                        ${citationsHtml}
+                    </div>`;
+            } else {
+                chatHistory.innerHTML += `<div class="message-bubble assistant-msg text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Error: ${data.error || 'Unauthorized'}</div>`;
+            }
+        } catch (err) {
+            chatHistory.innerHTML += `<div class="message-bubble assistant-msg text-danger"><i class="fas fa-wifi me-1"></i> Network connection error occurred.</div>`;
+        }
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async function loadAuditLogs() {
+        try {
+            const res = await fetch('/api/history/');
+            const logs = await res.json();
+            const tbody = document.getElementById('auditTableBody');
+            tbody.innerHTML = '';
+            if (Array.isArray(logs) && logs.length > 0) {
+                logs.forEach(log => {
+                    let badge = '';
+                    let rowClass = '';
+                    if (log.status === 'security_blocked' || log.security_flag) {
+                        badge = '<span class="status-badge-security"><i class="fas fa-exclamation-triangle me-1"></i>Security Alert</span>';
+                        rowClass = 'table-danger-soft';
+                    } else if (log.status === 'answered') {
+                        badge = '<span class="status-badge-answered">Answered</span>';
+                    } else {
+                        badge = '<span class="status-badge-insufficient">Insufficient</span>';
+                    }
+
+                    let srcs = log.source_references && log.source_references.length > 0 
+                        ? log.source_references.map(s => {
+                            const url = s.pdf_url ? `${s.pdf_url}#page=${s.page_number}` : '#';
+                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="badge bg-light text-dark border text-decoration-none" title="Open source PDF at page ${s.page_number}"><i class="fas fa-file-pdf text-danger me-1"></i>${s.document_id} (p.${s.page_number}) <i class="fas fa-external-link-alt ms-1 text-muted" style="font-size: 0.55rem;"></i></a>`;
+                        }).join(' ') 
+                        : '<span class="text-muted small">None</span>';
+                    tbody.innerHTML += `
+                        <tr class="${rowClass}">
+                            <td><small class="text-muted">${new Date(log.timestamp).toLocaleTimeString()}</small></td>
+                            <td><span class="badge bg-light text-dark border">${log.engineer_name}</span></td>
+                            <td><code>${log.machine_code || 'N/A'}</code></td>
+                            <td class="fw-medium">${log.question}</td>
+                            <td>${getConfidenceBadge(log.confidence_score)}</td>
+                            <td>${badge}</td>
+                            <td><small class="text-secondary">${srcs}</small></td>
+                        </tr>`;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No audit query logs found.</td></tr>`;
+            }
+        } catch (e) {
+            console.error('Failed to load logs', e);
+        }
+    }
+
+    document.getElementById('refreshLogsBtn').addEventListener('click', loadAuditLogs);
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const alertBox = document.getElementById('uploadAlert');
+
+        try {
+            const headers = {};
+            if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+            const res = await fetch('/api/manuals/', {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert"><i class="fas fa-check-circle me-2"></i>Manual "${result.document_id}" registered successfully!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                e.target.reset();
+            } else {
+                alertBox.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert"><i class="fas fa-times-circle me-2"></i>Access Denied / Upload Failed: ${result.detail || JSON.stringify(result)}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            }
+        } catch (err) {
+            alertBox.innerHTML = `<div class="alert alert-danger">An unexpected network error occurred.</div>`;
+        }
+    });
+
+    async function loadAdminOverview() {
+        try {
+            const res = await fetch('/api/admin-overview/');
+            if (!res.ok) return;
+            const data = await res.json();
+
+            // KPIs
+            if (data.metrics) {
+                const kpiMachines = document.getElementById('adminKpiMachines');
+                const kpiManuals = document.getElementById('adminKpiManuals');
+                const kpiQueries = document.getElementById('adminKpiQueries');
+                const kpiViolations = document.getElementById('adminKpiViolations');
+
+                if (kpiMachines) kpiMachines.textContent = data.metrics.total_machines;
+                if (kpiManuals) kpiManuals.textContent = data.metrics.total_manuals;
+                if (kpiQueries) kpiQueries.textContent = data.metrics.total_queries;
+                if (kpiViolations) kpiViolations.textContent = data.metrics.security_violations;
+            }
+
+            // Users Table
+            const usersTbody = document.getElementById('adminUsersTableBody');
+            if (usersTbody && data.users) {
+                usersTbody.innerHTML = '';
+                data.users.forEach(u => {
+                    let roleBadgeClass = u.role === 'admin' ? 'bg-danger' : (u.role === 'supervisor' ? 'bg-warning text-dark' : 'bg-primary');
+                    let aiBadge = u.has_ai_access 
+                        ? '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="fas fa-check me-1"></i>Active</span>' 
+                        : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="fas fa-ban me-1"></i>Cancelled</span>';
+                    let aiToggleBtn = u.has_ai_access
+                        ? `<button class="btn btn-sm btn-outline-warning py-0 px-2 small" onclick="adminToggleAiAccess(${u.id})" title="Cancel Assistant AI access"><i class="fas fa-ban me-1"></i>Cancel AI</button>`
+                        : `<button class="btn btn-sm btn-outline-success py-0 px-2 small" onclick="adminToggleAiAccess(${u.id})" title="Grant Assistant AI access"><i class="fas fa-check me-1"></i>Grant AI</button>`;
+                    
+                    let deleteBtn = (u.role === 'admin' && u.username === 'admin') 
+                        ? `<span class="text-muted small">-</span>`
+                        : `<button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="adminDeleteUser(${u.id}, '${u.username}')" title="Delete User"><i class="fas fa-trash-alt"></i></button>`;
+
+                    usersTbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-light text-primary rounded-circle p-2 me-2 border">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-semibold text-dark">${u.username}</span>
+                                        <div class="text-muted small" style="font-size: 0.75rem;">${u.email || 'No email'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge ${roleBadgeClass}">${(u.role || 'engineer').toUpperCase()}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    ${aiBadge}
+                                    ${aiToggleBtn}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <select class="form-select form-select-sm" id="role-select-${u.id}" style="width: 120px;">
+                                        <option value="engineer" ${u.role === 'engineer' ? 'selected' : ''}>Engineer</option>
+                                        <option value="supervisor" ${u.role === 'supervisor' ? 'selected' : ''}>Supervisor</option>
+                                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary py-1 px-2" onclick="updateUserRole(${u.id})">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td>${deleteBtn}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Manuals Table
+            const manualsTbody = document.getElementById('adminManualsTableBody');
+            if (manualsTbody && data.manuals) {
+                manualsTbody.innerHTML = '';
+                if (data.manuals.length === 0) {
+                    manualsTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No manuals found.</td></tr>';
+                } else {
+                    data.manuals.forEach(m => {
+                        manualsTbody.innerHTML += `
+                            <tr>
+                                <td><code class="fw-bold">${m.document_id}</code></td>
+                                <td class="text-truncate" style="max-width: 150px;">${m.title}</td>
+                                <td><span class="badge bg-light text-dark border">${m.machine_id}</span></td>
+                                <td><small class="text-muted">v${m.revision}</small></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="adminDeleteManual(${m.id}, '${m.document_id}')" title="Delete Manual">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+
+            // Violations Table
+            const violTbody = document.getElementById('adminViolationsTableBody');
+            if (violTbody && data.recent_violations) {
+                violTbody.innerHTML = '';
+                if (data.recent_violations.length === 0) {
+                    violTbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No security violations recorded.</td></tr>';
+                } else {
+                    data.recent_violations.forEach(v => {
+                        violTbody.innerHTML += `
+                            <tr>
+                                <td><small class="text-muted">${v.timestamp.split(' ')[1] || v.timestamp}</small></td>
+                                <td><span class="badge bg-light text-dark">${v.engineer}</span></td>
+                                <td><code>${v.machine}</code></td>
+                                <td><span class="badge bg-danger-subtle text-danger"><i class="fas fa-ban me-1"></i>Intercepted</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load admin overview', e);
+        }
+    }
+
+    async function updateUserRole(userId) {
+        const select = document.getElementById(`role-select-${userId}`);
+        const alertBox = document.getElementById('userUpdateAlert');
+        if (!select) return;
+
+        const newRole = select.value;
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+            const res = await fetch('/api/admin-update-role/', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ user_id: userId, role: newRole })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-check-circle me-1"></i>Updated role for "${data.username}" to <strong>${data.role}</strong>.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                loadAdminOverview();
+            } else {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-times-circle me-1"></i>${data.error || 'Failed to update role.'}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            }
+        } catch (e) {
+            if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger py-2 px-3 small">Network error while updating role.</div>`;
+        }
+    }
+
+    const refreshAdminBtn = document.getElementById('refreshAdminBtn');
+    if (refreshAdminBtn) {
+        refreshAdminBtn.addEventListener('click', loadAdminOverview);
+    }
+
+    const newMachineForm = document.getElementById('newMachineForm');
+    if (newMachineForm) {
+        newMachineForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const machine_id = document.getElementById('newMachineId').value.trim();
+            const name = document.getElementById('newMachineName').value.trim();
+            const description = document.getElementById('newMachineDesc').value.trim();
+            const alertBox = document.getElementById('machineAlert');
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+                const res = await fetch('/api/machines/', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ machine_id, name, description })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if (alertBox) alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-check-circle me-1"></i>Machine "${data.machine_id}" registered!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                    newMachineForm.reset();
+                    loadMachines();
+                    loadAdminOverview();
+                } else {
+                    if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-times-circle me-1"></i>Registration failed: ${JSON.stringify(data)}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                }
+            } catch (err) {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger py-2 px-3 small">Network error registering machine.</div>`;
+            }
+        });
+    }
+
+    async function adminToggleAiAccess(userId) {
+        const alertBox = document.getElementById('userUpdateAlert');
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+            const res = await fetch('/api/admin-toggle-ai-access/', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-check-circle me-1"></i>${data.message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                loadAdminOverview();
+            } else {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-times-circle me-1"></i>${data.error || 'Failed to update AI access.'}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            }
+        } catch (e) {
+            if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger py-2 px-3 small">Network error while updating AI access.</div>`;
+        }
+    }
+
+    async function adminDeleteUser(userId, username) {
+        if (!confirm(`Are you sure you want to permanently delete user '${username}'?`)) return;
+        const alertBox = document.getElementById('userUpdateAlert');
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+            const res = await fetch('/api/admin-delete-user/', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-trash-alt me-1"></i>${data.message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                loadAdminOverview();
+            } else {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-times-circle me-1"></i>${data.error || 'Failed to delete user.'}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            }
+        } catch (e) {
+            if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger py-2 px-3 small">Network error deleting user.</div>`;
+        }
+    }
+
+    async function adminDeleteManual(manualId, docId) {
+        if (!confirm(`Are you sure you want to delete equipment manual '${docId}'?`)) return;
+        try {
+            const headers = {};
+            if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+            const res = await fetch(`/api/manuals/${manualId}/`, {
+                method: 'DELETE',
+                headers: headers
+            });
+            if (res.ok) {
+                loadAdminOverview();
+            } else {
+                alert('Failed to delete manual.');
+            }
+        } catch (e) {
+            alert('Network error deleting manual.');
+        }
+    }
+
+    const newAdminUserForm = document.getElementById('newAdminUserForm');
+    if (newAdminUserForm) {
+        newAdminUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('addUsername').value.trim();
+            const password = document.getElementById('addPassword').value.trim();
+            const email = document.getElementById('addEmail').value.trim();
+            const role = document.getElementById('addRole').value;
+            const has_ai_access = document.getElementById('addAiAccess').checked;
+            const alertBox = document.getElementById('userUpdateAlert');
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (csrftoken) headers['X-CSRFToken'] = csrftoken;
+
+                const res = await fetch('/api/admin-create-user/', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ username, password, email, role, has_ai_access })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if (alertBox) alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-check-circle me-1"></i>User '${data.username}' created successfully!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                    newAdminUserForm.reset();
+                    const collapseEl = document.getElementById('addUserCollapse');
+                    if (collapseEl) {
+                        const bsCollapse = bootstrap.Collapse.getInstance(collapseEl);
+                        if (bsCollapse) bsCollapse.hide();
+                    }
+                    loadAdminOverview();
+                } else {
+                    if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger alert-dismissible fade show py-2 px-3 small" role="alert"><i class="fas fa-times-circle me-1"></i>${data.error || 'Failed to create user.'}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                }
+            } catch (err) {
+                if (alertBox) alertBox.innerHTML = `<div class="alert alert-danger py-2 px-3 small">Network error creating user.</div>`;
+            }
+        });
+    }
+</script>
+</body>
+</html>

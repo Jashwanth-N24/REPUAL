@@ -1,0 +1,18 @@
+# Virtual Environment
+venv/
+env/
+.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local logs
+*.log
+runserver*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

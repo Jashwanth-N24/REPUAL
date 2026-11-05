@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quality Workspace{% endblock %} | MRIT 3.O</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/custom.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top py-2 quality-navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="/">
+                <span class="brand-mark me-2"><i class="bi bi-cpu"></i></span>
+                <span class="fs-5 tracking-wide brand-name">MRIT 3.O</span>
+                <span class="badge rounded-pill bg-primary-subtle text-primary ms-2">Quality</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                {% if user.is_authenticated %}
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 quality-nav-links">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-chat-square-text me-1"></i>Manual Assistant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'inspections:dashboard' %}">
+                            <i class="bi bi-grid-1x2 me-1"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'single_inspect' %}active{% endif %}" href="{% url 'inspections:single_inspect' %}">
+                            <i class="bi bi-camera me-1"></i> Inspect
+                        </a>
+                    </li>
+                    {% if user.role == 'engineer' or user.role == 'supervisor' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/incidents/' in request.path %}active{% endif %}" href="{% url 'incidents:list' %}">
+                            <i class="bi bi-clipboard2-pulse me-1"></i> Incidents
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'batch' in request.path or 'metrics' in request.path or 'products' in request.path %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">More</a>
+                        <ul class="dropdown-menu shadow-sm">
+                            <li><a class="dropdown-item" href="{% url 'inspections:batch_inspect' %}"><i class="bi bi-collection me-2 text-primary"></i>Batch processing</a></li>
+                            <li><a class="dropdown-item" href="{% url 'inspections:history' %}"><i class="bi bi-clock-history me-2 text-primary"></i>Inspection history</a></li>
+                            <li><a class="dropdown-item" href="{% url 'metrics:benchmark' %}"><i class="bi bi-bar-chart-steps me-2 text-primary"></i>Benchmark & metrics</a></li>
+                            {% if user.is_admin_role %}
+                            <li><a class="dropdown-item" href="{% url 'products:list' %}"><i class="bi bi-box-seam me-2 text-primary"></i>Products</a></li>
+                            <li><a class="dropdown-item" href="/admin/" target="_blank"><i class="bi bi-sliders me-2 text-primary"></i>Admin settings</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <button class="btn btn-light border rounded-pill dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="user-status-dot me-2"></span>
+                            <span class="fw-semibold text-dark">{{ user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li class="dropdown-header">Signed in as <strong>{{ user.username }}</strong></li>
+                            <li><span class="dropdown-item-text small"><span class="badge rounded-pill me-1 {% if user.role == 'admin' %}bg-danger{% elif user.role == 'supervisor' %}bg-warning text-dark{% else %}bg-primary{% endif %}">{{ user.get_role_display }}</span>{{ user.department|default:'Manufacturing' }}</span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header"><i class="bi bi-person-gear me-1"></i>Switch demo role</h6></li>
+                            {% for role, label in user.ROLE_CHOICES %}
+                            <li><form method="post" action="{% url 'accounts:demo_login' %}">{% csrf_token %}<input type="hidden" name="role" value="{{ role }}"><input type="hidden" name="next" value="{{ request.path }}"><button type="submit" class="dropdown-item {% if user.role == role %}active{% endif %}">{{ label }}</button></form></li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                {% else %}
+                <div class="d-flex ms-auto gap-2">
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-sm">Sign In</a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Register</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages / Toast Alerts -->
+    <div class="container-fluid px-4 mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        {% if message.tags == 'error' %}
+                            <i class="bi bi-exclamation-triangle-fill fs-4 me-2 text-danger"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill fs-4 me-2 text-warning"></i>
+                        {% elif message.tags == 'success' %}
+                            <i class="bi bi-check-circle-fill fs-4 me-2 text-success"></i>
+                        {% else %}
+                            <i class="bi bi-info-circle-fill fs-4 me-2 text-info"></i>
+                        {% endif %}
+                        <div>{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main class="flex-grow-1 py-3">
+        <div class="container-fluid px-4">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white text-secondary py-3 mt-auto border-top">
+        <div class="container-fluid px-4 d-flex flex-wrap justify-content-between align-items-center fs-xs">
+            <div>
+                <span class="text-dark fw-bold">MRIT 3.O</span> <span class="ms-1">Manufacturing workspace</span>
+            </div>
+            <div class="d-flex gap-3"><span>Manual Assistant</span><span>Visual Quality Inspection</span></div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

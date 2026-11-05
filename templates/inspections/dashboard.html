@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Quality Dashboard{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">
+            <i class="bi bi-cpu text-primary me-2"></i>Manufacturing Quality Dashboard
+        </h3>
+        <p class="text-secondary small mb-0">
+            Real-time visual defect screening &bull; Registered Product: <span class="badge bg-dark">P-PLATE01</span> &bull; Model: <span class="badge bg-secondary">BIT-PLATE-CV-1.0</span>
+        </p>
+    </div>
+    <div class="d-flex gap-2 mt-3 mt-md-0">
+        <a href="{% url 'inspections:single_inspect' %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-camera me-1"></i> Single Inspect
+        </a>
+        <a href="{% url 'inspections:batch_inspect' %}" class="btn btn-outline-primary shadow-sm">
+            <i class="bi bi-collection me-1"></i> Batch Upload
+        </a>
+    </div>
+</div>
+
+<!-- Key Performance Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 stat-widget stat-success card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Total Processed</div>
+                        <h2 class="fw-bold text-dark mb-0 mt-1">{{ total_count }}</h2>
+                    </div>
+                    <div class="p-3 bg-light rounded-circle text-primary">
+                        <i class="bi bi-clipboard2-check fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-muted small">
+                    <span class="text-success fw-bold">{{ completed_count }}</span> completed, 
+                    <span class="text-danger fw-bold">{{ failed_count }}</span> invalid/rejected
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 stat-widget stat-danger card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Defect Detection Rate</div>
+                        <h2 class="fw-bold text-danger mb-0 mt-1">{{ defect_rate }}%</h2>
+                    </div>
+                    <div class="p-3 bg-light rounded-circle text-danger">
+                        <i class="bi bi-exclamation-octagon fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-muted small">
+                    <span class="fw-bold text-danger">{{ defective_count }}</span> Defective / <span class="fw-bold text-success">{{ normal_count }}</span> Normal
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 stat-widget stat-warning card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Pending Supervisor Reviews</div>
+                        <h2 class="fw-bold text-warning mb-0 mt-1">{{ pending_review_count }}</h2>
+                    </div>
+                    <div class="p-3 bg-light rounded-circle text-warning">
+                        <i class="bi bi-person-check fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-muted small">
+                    {% if user.is_supervisor_role %}
+                        <a href="{% url 'inspections:history' %}?review_status=pending" class="text-warning fw-bold text-decoration-none">
+                            Review pending queue &rarr;
+                        </a>
+                    {% else %}
+                        <span>Supervisor action required</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 stat-widget card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Model Recall Rate</div>
+                        <h2 class="fw-bold text-primary mb-0 mt-1">100.0%</h2>
+                    </div>
+                    <div class="p-3 bg-light rounded-circle text-info">
+                        <i class="bi bi-graph-up-arrow fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-muted small">
+                    <a href="{% url 'metrics:benchmark' %}" class="text-primary fw-semibold text-decoration-none">
+                        View 60-sample benchmark &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Section: Recent Inspections & Batch Queue -->
+<div class="row g-4 mb-4">
+    <!-- Recent Inspections Table -->
+    <div class="col-12 col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Visual Inspections</span>
+                <a href="{% url 'inspections:history' %}" class="btn btn-outline-secondary btn-sm">
+                    View All History &rarr;
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light fs-xs text-uppercase">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Sample Image</th>
+                                <th>Filename</th>
+                                <th>Status</th>
+                                <th>AI Prediction</th>
+                                <th>Confidence</th>
+                                <th>Supervisor Review</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for insp in recent_inspections %}
+                            <tr>
+                                <td class="font-mono fs-xs text-muted">{{ insp.id }}</td>
+                                <td>
+                                    {% if insp.image %}
+                                        <img src="{{ insp.image.url }}" alt="Plate preview" class="rounded border shadow-sm" style="width: 48px; height: 48px; object-fit: cover;" onerror="this.hidden=true;this.nextElementSibling.classList.remove('d-none');">
+                                        <span class="inspection-image-fallback d-none" aria-label="Preview unavailable"><i class="bi bi-image"></i></span>
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-truncate" style="max-width: 150px;" title="{{ insp.original_filename }}">
+                                        {{ insp.original_filename }}
+                                    </div>
+                                    <span class="fs-xs text-muted">{{ insp.product.product_id }} &bull; {{ insp.submitter.username }}</span>
+                                </td>
+                                <td>
+                                    {% if insp.status == 'completed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Completed</span>
+                                    {% elif insp.status == 'failed' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" title="{{ insp.failure_reason }}">Rejected</span>
+                                    {% elif insp.status == 'processing' %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Processing</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border">Queued</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if insp.original_predicted_class == 'Defective' %}
+                                        <span class="badge bg-danger text-white fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>Defective</span>
+                                    {% elif insp.original_predicted_class == 'Normal' %}
+                                        <span class="badge bg-success text-white fw-bold"><i class="bi bi-check-circle me-1"></i>Normal</span>
+                                    {% else %}
+                                        <span class="text-muted small">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if insp.confidence is not None %}
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="width: 60px;">
+                                                <div class="progress-bar {% if insp.original_predicted_class == 'Defective' %}bg-danger{% else %}bg-success{% endif %}" style="width: {{ insp.confidence|floatformat:2|cut:'.' }}%;"></div>
+                                            </div>
+                                            <span class="fs-xs font-mono fw-bold">{{ insp.confidence|floatformat:2 }}</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted small">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if insp.review_status == 'confirmed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-check2-all me-1"></i>Confirmed</span>
+                                    {% elif insp.review_status == 'corrected' %}
+                                        <span class="badge bg-warning-subtle text-dark border border-warning"><i class="bi bi-pencil-square me-1"></i>Corrected</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'inspections:detail' pk=insp.id %}" class="btn btn-outline-primary btn-sm">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox display-6 d-block mb-2 text-secondary"></i>
+                                    No inspections recorded yet. Start by inspecting a sample image!
+                                    <div class="mt-3">
+                                        <a href="{% url 'inspections:single_inspect' %}" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-camera me-1"></i> Inspect First Image
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar: Celery Batch Processing & Quick Info -->
+    <div class="col-12 col-lg-4">
+        <!-- Batches Monitor Card -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold"><i class="bi bi-stack me-2 text-primary"></i>Background Batches</span>
+                <a href="{% url 'inspections:batch_inspect' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg"></i> New Batch
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_batches %}
+                    <div class="list-group list-group-flush">
+                        {% for b in recent_batches %}
+                        <a href="{% url 'inspections:batch_detail' batch_id=b.batch_id %}" class="list-group-item list-group-item-action px-0 py-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold font-mono text-dark">Batch #{{ b.batch_id|stringformat:".8s" }}</span>
+                                {% if b.status == 'completed' %}
+                                    <span class="badge bg-success">Done</span>
+                                {% elif b.status == 'partial_failed' %}
+                                    <span class="badge bg-warning text-dark">Partial Failures</span>
+                                {% elif b.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Processing</span>
+                                {% endif %}
+                            </div>
+                            <div class="progress my-2">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: {{ b.progress_percentage }}%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted fs-xs">
+                                <span>{{ b.completed_items }} completed, {{ b.failed_items }} failed of {{ b.total_items }}</span>
+                                <span>{{ b.created_at|timesince }} ago</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted small">
+                        <i class="bi bi-collection text-secondary fs-3 d-block mb-2"></i>
+                        No batches submitted yet. Small batches (1-10 items) are processed via Celery and Redis.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- System Architecture Specification Card -->
+        <div class="card bg-dark text-white shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-cpu-fill me-2"></i>Inspection System Specs</h6>
+                <ul class="list-unstyled mb-0 fs-xs text-secondary lh-lg">
+                    <li><strong class="text-white">Active Product:</strong> P-PLATE01 (Centered metal plate)</li>
+                    <li><strong class="text-white">Classifier:</strong> BIT-PLATE-CV-1.0 (17-feature Logistic Reg)</li>
+                    <li><strong class="text-white">Decision Rule:</strong> Defective when defect_prob &ge; 0.50</li>
+                    <li><strong class="text-white">Task Queue:</strong> Celery 5.6 &bull; Redis 8.10</li>
+                    <li><strong class="text-white">Pre-checks:</strong> Format (JPEG/PNG), Size (&le;5MB), Dims (64-4096px)</li>
+                    <li><strong class="text-white">Role Enforcement:</strong> Backend-guarded supervisor review</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

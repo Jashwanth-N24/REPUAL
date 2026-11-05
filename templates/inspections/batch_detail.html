@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Batch #{{ batch.batch_id|stringformat:".8s" }} Progress - AI Visual Quality{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-11">
+        <!-- Header & Breadcrumbs -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <h3 class="fw-bold text-dark mb-0">Batch Processing Monitor</h3>
+                    <span class="badge font-mono bg-dark fs-6">#{{ batch.batch_id|stringformat:".8s" }}</span>
+                    <span id="batchStatusBadge" class="badge {% if batch.status == 'completed' %}bg-success{% elif batch.status == 'partial_failed' %}bg-warning text-dark{% elif batch.status == 'failed' %}bg-danger{% else %}bg-primary{% endif %}">
+                        {{ batch.get_status_display }}
+                    </span>
+                </div>
+                <p class="text-secondary small mb-0">
+                    Product: <strong class="text-dark">{{ batch.product.product_id }}</strong> &bull;
+                    Submitted by: <strong class="text-dark">{{ batch.submitter.username }}</strong> &bull;
+                    Created: {{ batch.created_at|date:"M d, Y H:i:s" }}
+                </p>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="{% url 'inspections:batch_inspect' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i> New Batch
+                </a>
+                <a href="{% url 'inspections:history' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-clock-history me-1"></i> Inspection History
+                </a>
+            </div>
+        </div>
+
+        <!-- Overall Batch Progress Widget -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-uppercase fs-xs text-muted">Batch Completion Progress</span>
+                    <span id="progressText" class="fw-bold font-mono text-dark">{{ batch.progress_percentage }}%</span>
+                </div>
+                <div class="progress mb-3" style="height: 14px;">
+                    <div id="batchProgressBar" class="progress-bar progress-bar-striped {% if batch.status == 'processing' or batch.status == 'queued' %}progress-bar-animated{% endif %} bg-primary" 
+                         role="progressbar" 
+                         style="width: {{ batch.progress_percentage }}%;" 
+                         aria-valuenow="{{ batch.progress_percentage }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                </div>
+
+                <div class="row g-3 text-center">
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded">
+                            <span class="fs-xs text-muted d-block">Total Items</span>
+                            <strong id="counterTotal" class="fs-5 font-mono text-dark">{{ batch.total_items }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded">
+                            <span class="fs-xs text-muted d-block">Completed</span>
+                            <strong id="counterCompleted" class="fs-5 font-mono text-success">{{ batch.completed_items }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded">
+                            <span class="fs-xs text-muted d-block">Failed / Rejected</span>
+                            <strong id="counterFailed" class="fs-5 font-mono text-danger">{{ batch.failed_items }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded">
+                            <span class="fs-xs text-muted d-block">Celery Queue Status</span>
+                            <span id="queueIndicator" class="badge mt-1 {% if batch.status == 'completed' or batch.status == 'partial_failed' %}bg-success{% else %}bg-primary{% endif %}">
+                                {% if batch.status == 'completed' or batch.status == 'partial_failed' or batch.status == 'failed' %}Finished{% else %}Active{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Progression Table -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark"><i class="bi bi-list-task text-primary me-2"></i>Batch Items Status Breakdown</span>
+                <span class="text-muted fs-xs" id="livePollingIndicator"><i class="bi bi-arrow-repeat spin me-1"></i>Live Polling Active</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light fs-xs text-uppercase">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Sample Preview</th>
+                                <th>Filename</th>
+                                <th>Item Status</th>
+                                <th>AI Verdict</th>
+                                <th>Confidence</th>
+                                <th>Validation / Failure Reason</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batchItemsTableBody">
+                            {% for item in inspections %}
+                            <tr id="row-{{ item.id }}">
+                                <td class="font-mono fs-xs text-muted">{{ forloop.counter }}</td>
+                                <td>
+                                    {% if item.image %}
+                                        <img src="{{ item.image.url }}" alt="Plate" class="rounded border shadow-sm" style="width: 44px; height: 44px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-truncate" style="max-width: 180px;" title="{{ item.original_filename }}">
+                                        {{ item.original_filename }}
+                                    </div>
+                                    <span class="fs-xs text-muted">{{ item.file_size|filesizeformat }}</span>
+                                </td>
+                                <td>
+                                    {% if item.status == 'completed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-check-circle me-1"></i>Completed
+                                        </span>
+                                    {% elif item.status == 'failed' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                            <i class="bi bi-x-circle me-1"></i>Rejected
+                                        </span>
+                                    {% elif item.status == 'processing' %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                            <i class="bi bi-hourglass-split me-1"></i>Processing
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border">
+                                            <i class="bi bi-clock me-1"></i>Queued
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.original_predicted_class == 'Defective' %}
+                                        <span class="badge bg-danger text-white fw-bold">Defective</span>
+                                    {% elif item.original_predicted_class == 'Normal' %}
+                                        <span class="badge bg-success text-white fw-bold">Normal</span>
+                                    {% else %}
+                                        <span class="text-muted small">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td class="font-mono fs-xs">
+                                    {% if item.confidence is not None %}
+                                        <strong>{{ item.confidence|floatformat:2 }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">&mdash;</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.failure_reason %}
+                                        <div class="alert alert-danger py-1 px-2 mb-0 fs-xs d-inline-block text-wrap" style="max-width: 320px;">
+                                            <i class="bi bi-shield-x me-1"></i><strong>Rejected:</strong> {{ item.failure_reason }}
+                                        </div>
+                                    {% elif item.status == 'completed' %}
+                                        <span class="text-success fs-xs"><i class="bi bi-shield-check me-1"></i>Validated &amp; Inferred</span>
+                                    {% else %}
+                                        <span class="text-muted fs-xs">Validating...</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'inspections:detail' pk=item.id %}" class="btn btn-outline-primary btn-sm">
+                                        Inspect
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const batchId = "{{ batch.batch_id }}";
+    const statusBadge = document.getElementById('batchStatusBadge');
+    const progressBar = document.getElementById('batchProgressBar');
+    const progressText = document.getElementById('progressText');
+    const counterCompleted = document.getElementById('counterCompleted');
+    const counterFailed = document.getElementById('counterFailed');
+    const indicator = document.getElementById('livePollingIndicator');
+
+    let currentStatus = "{{ batch.status }}";
+    const isFinished = (status) => ['completed', 'partial_failed', 'failed'].includes(status);
+
+    if (isFinished(currentStatus)) {
+        indicator.innerHTML = '<i class="bi bi-check-all text-success me-1"></i>Processing Complete';
+        return;
+    }
+
+    // Poll endpoint every 1.5 seconds
+    const interval = setInterval(function() {
+        fetch(`/quality/batches/${batchId}/status/`)
+            .then(res => res.json())
+            .then(data => {
+                progressBar.style.width = `${data.progress_percentage}%`;
+                progressText.textContent = `${data.progress_percentage}%`;
+                counterCompleted.textContent = data.completed_items;
+                counterFailed.textContent = data.failed_items;
+
+                if (isFinished(data.status)) {
+                    clearInterval(interval);
+                    indicator.innerHTML = '<i class="bi bi-check-all text-success me-1"></i>Processing Complete';
+                    progressBar.classList.remove('progress-bar-animated');
+                    // Reload to show final statuses and predictions
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            })
+            .catch(err => {
+                console.warn('Batch status polling error:', err);
+            });
+    }, 1500);
+});
+</script>
+{% endblock %}
+

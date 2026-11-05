@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | VeriCompress</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bs-body-font-family: 'Plus Jakarta Sans', sans-serif;
+            --pastel-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --primary-color: #0284c7;
+            --primary-hover: #0369a1;
+            --text-main: #334155;
+            --sidebar-bg: #1e293b;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: var(--text-main);
+            font-family: var(--bs-body-font-family);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            max-width: 460px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .brand-header {
+            background: var(--sidebar-bg);
+            color: #ffffff;
+            padding: 36px 28px 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border-color: #cbd5e1;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        .btn-primary-custom:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="brand-header">
+        <h2 class="mb-1 text-white" style="font-weight: 800; letter-spacing: -0.6px; font-size: 2rem;">
+            Veri<span style="color: #38bdf8;">Compress</span>
+        </h2>
+        <p class="text-secondary small mb-0 fw-medium">Manufacturing Manual Verification & RAG Portal</p>
+    </div>
+
+    <div class="p-4 p-md-5">
+        {% if error %}
+        <div class="alert alert-danger py-2 px-3 small rounded-3 mb-4 d-flex align-items-center" role="alert">
+            <i class="fas fa-exclamation-circle me-2 flex-shrink-0"></i>
+            <div>{{ error }}</div>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-secondary text-uppercase">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-user"></i></span>
+                    <input type="text" name="username" id="usernameInput" class="form-control border-start-0" placeholder="e.g. admin, engineer" required autofocus>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-semibold text-secondary text-uppercase">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-lock"></i></span>
+                    <input type="password" name="password" id="passwordInput" class="form-control border-start-0" placeholder="Enter password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 shadow-sm">
+                <i class="fas fa-sign-in-alt me-2"></i> Sign In to Portal
+            </button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

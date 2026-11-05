@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Model Quality Benchmark & Confusion Matrix - AI Visual Quality{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-11">
+        <!-- Header -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <h3 class="fw-bold text-dark mb-0">Model Quality Benchmark &amp; Confusion Matrix</h3>
+                    <span class="badge bg-primary font-mono">{{ metrics.model_version }}</span>
+                </div>
+                <p class="text-secondary small mb-0">
+                    Comprehensive evaluation using all 60 labeled development sample plates (30 Normal, 30 Defective).
+                </p>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="{% url 'metrics:api' %}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-code-slash me-1"></i> Raw JSON API
+                </a>
+            </div>
+        </div>
+
+        <!-- 4 Metric KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card h-100 stat-widget stat-success card-hover">
+                    <div class="card-body">
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Defect Recall (TP / [TP+FN])</div>
+                        <h2 class="fw-bold text-success mb-0 mt-1">{{ metrics.defect_recall_percent }}%</h2>
+                        <span class="fs-xs text-muted">True Positive Defect Identification</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card h-100 stat-widget card-hover">
+                    <div class="card-body">
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Model Precision (TP / [TP+FP])</div>
+                        <h2 class="fw-bold text-primary mb-0 mt-1">{{ metrics.precision_percent }}%</h2>
+                        <span class="fs-xs text-muted">Defect Prediction Reliability</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card h-100 stat-widget stat-warning card-hover">
+                    <div class="card-body">
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Specificity (TN / [TN+FP])</div>
+                        <h2 class="fw-bold text-dark mb-0 mt-1">{{ metrics.specificity_percent }}%</h2>
+                        <span class="fs-xs text-muted">Normal Sample Discrimination</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card h-100 stat-widget card-hover">
+                    <div class="card-body">
+                        <div class="text-uppercase text-muted fs-xs fw-bold">Overall Accuracy ([TP+TN] / N)</div>
+                        <h2 class="fw-bold text-dark mb-0 mt-1">{{ metrics.accuracy_percent }}%</h2>
+                        <span class="fs-xs text-muted">{{ metrics.evaluated_count }} of {{ metrics.total_samples }} Samples Correct</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confusion Matrix & Limitations Layout -->
+        <div class="row g-4 mb-4">
+            <!-- 2x2 Confusion Matrix -->
+            <div class="col-12 col-lg-7">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark">
+                            <i class="bi bi-grid-3x3 text-primary me-2"></i>2 &times; 2 Confusion Matrix
+                        </span>
+                        <span class="badge bg-light text-muted border">Ordered: Normal, Defective</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-bordered confusion-matrix-table mb-3">
+                                <thead>
+                                    <tr class="table-light">
+                                        <th style="width: 28%;" class="border-0"></th>
+                                        <th colspan="2" class="text-center fw-bold bg-light">Predicted Labels</th>
+                                        <th style="width: 18%;" class="bg-light fw-bold">Row Total</th>
+                                    </tr>
+                                    <tr class="table-secondary fs-xs text-uppercase">
+                                        <th class="text-start">Actual Ground Truth</th>
+                                        <th style="width: 27%;">Predicted Normal</th>
+                                        <th style="width: 27%;">Predicted Defective</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th class="table-light text-start align-middle fw-bold">
+                                            Actual Normal
+                                        </th>
+                                        <td class="matrix-cell-tn">
+                                            <div>{{ metrics.matrix.row_normal.pred_normal }}</div>
+                                            <span class="fs-xs fw-normal text-muted d-block">TN (True Neg)</span>
+                                        </td>
+                                        <td class="matrix-cell-fp">
+                                            <div>{{ metrics.matrix.row_normal.pred_defective }}</div>
+                                            <span class="fs-xs fw-normal text-muted d-block">FP (False Pos)</span>
+                                        </td>
+                                        <td class="align-middle fw-bold font-mono bg-light">
+                                            {{ metrics.matrix.row_normal.total }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-light text-start align-middle fw-bold">
+                                            Actual Defective
+                                        </th>
+                                        <td class="matrix-cell-fn">
+                                            <div>{{ metrics.matrix.row_defective.pred_normal }}</div>
+                                            <span class="fs-xs fw-normal text-muted d-block">FN (False Neg)</span>
+                                        </td>
+                                        <td class="matrix-cell-tp">
+                                            <div>{{ metrics.matrix.row_defective.pred_defective }}</div>
+                                            <span class="fs-xs fw-normal text-muted d-block">TP (True Pos)</span>
+                                        </td>
+                                        <td class="align-middle fw-bold font-mono bg-light">
+                                            {{ metrics.matrix.row_defective.total }}
+                                        </td>
+                                    </tr>
+                                    <tr class="table-light fw-bold font-mono">
+                                        <th class="text-start">Column Total</th>
+                                        <td>{{ metrics.matrix.col_totals.pred_normal }}</td>
+                                        <td>{{ metrics.matrix.col_totals.pred_defective }}</td>
+                                        <td>{{ metrics.evaluated_count }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Explicit Missing / Failed Reports -->
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light border fs-xs">
+                            <span class="text-muted">Missing or Failed Sample Inferences:</span>
+                            <span class="badge {% if metrics.failed_count == 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ metrics.failed_count }} Failed
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Limitations & Architectural Notes -->
+            <div class="col-12 col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3">
+                        <span class="fw-bold text-dark">
+                            <i class="bi bi-exclamation-triangle text-warning me-2"></i>Scope, Limitations &amp; Factory Validity
+                        </span>
+                    </div>
+                    <div class="card-body p-4 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="alert alert-warning border border-warning fs-xs mb-3">
+                                <strong>Zero False Negatives Context:</strong>
+                                While Defect Recall is 100.0% (30/30) on this student set, this cannot establish real factory reliability because images are synthetic procedural renderings with fixed centering and dark borders.
+                            </div>
+
+                            <h6 class="fw-bold text-dark fs-xs text-uppercase mb-2">Key Operational Constraints</h6>
+                            <ul class="fs-xs text-secondary ps-3 mb-0 lh-lg">
+                                <li><strong>Procedural Data:</strong> Synthetic metal plate illustrations with simulated scratch/pit textures, not industrial camera photographs.</li>
+                                <li><strong>Fixed Framing Contract:</strong> Cropped from <code>[16:112, 16:112]</code>; unaligned, rotated, or dirty real-world parts will degrade performance.</li>
+                                <li><strong>Uncalibrated Sigmoid Scores:</strong> Confidence values are raw logistic outputs, not calibrated safety probabilities.</li>
+                                <li><strong>Human Supervision Mandate:</strong> Supervisor verification is required for quality audit compliance.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-2 bg-dark text-secondary rounded fs-xs font-mono mt-3">
+                            Feature Vector: 17 standard features [Mean, Std, 8 Quantiles, 5 Fractions &lt; -threshold, Diff X/Y]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Labeled 60 Samples Verification Table -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center">
+                <div>
+                    <span class="fw-bold text-dark"><i class="bi bi-check2-all text-primary me-2"></i>60 Labeled Sample Verification Records</span>
+                    <span class="text-muted fs-xs ms-2">Reference: <code>Samples/labels.csv</code></span>
+                </div>
+                <div class="mt-2 mt-sm-0">
+                    <input type="text" id="sampleFilterInput" class="form-control form-control-sm" placeholder="Filter sample name..." style="width: 220px;">
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+                    <table class="table table-sm table-hover align-middle mb-0" id="samplesTable">
+                        <thead class="table-light fs-xs text-uppercase sticky-top">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Sample Image</th>
+                                <th>Filename</th>
+                                <th>Ground Truth Label</th>
+                                <th>AI Predicted Class</th>
+                                <th>Confidence</th>
+                                <th>Defect Prob</th>
+                                <th>Matrix Cell</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in metrics.sample_results %}
+                            <tr class="sample-row">
+                                <td class="font-mono fs-xs text-muted">{{ forloop.counter }}</td>
+                                <td>
+                                    <img src="/samples-media/{{ s.relative_path }}" alt="{{ s.image_name }}" class="rounded border shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                                </td>
+                                <td class="font-mono fs-xs fw-semibold">{{ s.image_name }}</td>
+                                <td>
+                                    {% if s.actual_label == 'Defective' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Defective</span>
+                                    {% else %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Normal</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if s.predicted_class == 'Defective' %}
+                                        <span class="badge bg-danger text-white">Defective</span>
+                                    {% else %}
+                                        <span class="badge bg-success text-white">Normal</span>
+                                    {% endif %}
+                                </td>
+                                <td class="font-mono fs-xs fw-bold">{{ s.confidence|floatformat:4 }}</td>
+                                <td class="font-mono fs-xs text-muted">{{ s.defect_probability|floatformat:4 }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border font-mono fs-xs">{{ s.classification }}</span>
+                                </td>
+                                <td>
+                                    {% if s.correct %}
+                                        <span class="badge bg-success"><i class="bi bi-check-lg"></i> Match</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-lg"></i> Mismatch</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterInput = document.getElementById('sampleFilterInput');
+    const rows = document.querySelectorAll('.sample-row');
+
+    filterInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}
+

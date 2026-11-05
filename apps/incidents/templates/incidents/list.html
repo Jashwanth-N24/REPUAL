@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Quality Incidents{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4 pb-3 border-bottom">
+    <div>
+        <span class="eyebrow-label">QUALITY WORKSPACE</span>
+        <h1 class="h2 fw-bold mb-1">{% if is_supervisor %}Incident review{% else %}Quality incidents{% endif %}</h1>
+        <p class="text-muted mb-0">{% if is_supervisor %}Review saved evidence and record a follow-up decision.{% else %}Create a cited incident from your completed Defective inspections.{% endif %}</p>
+    </div>
+    <div class="incident-intro-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+</div>
+
+{% if is_supervisor %}
+<section class="card border-0 shadow-sm">
+    <div class="card-header border-0 bg-white px-4 pt-4 pb-3">
+        <h2 class="h5 fw-bold mb-1">All quality incidents</h2>
+        <p class="text-muted small mb-0">Supervisor review is separate from the original model prediction and Round 2 review.</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase">
+                <tr><th class="ps-4">Incident</th><th>Inspection</th><th>Engineer</th><th>Evidence</th><th>Review</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for incident in incidents %}
+                <tr>
+                    <td class="ps-4"><span class="font-mono small">{{ incident.incident_id|stringformat:".8s" }}</span><div class="small text-muted">{{ incident.created_at|date:"M j, Y H:i" }}</div></td>
+                    <td>#{{ incident.inspection_id }}<div class="small text-muted">{{ incident.product_id_snapshot }} · {{ incident.original_model_result }}</div></td>
+                    <td>{{ incident.creator.username }}</td>
+                    <td><span class="badge rounded-pill {% if incident.evidence_status == 'Sufficient' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-dark{% endif %}">{{ incident.evidence_status }}</span></td>
+                    <td><span class="badge rounded-pill bg-light text-dark border">{{ incident.review_status }}</span></td>
+                    <td class="text-end pe-4"><a href="{% url 'incidents:detail' incident_id=incident.incident_id %}" class="btn btn-outline-primary btn-sm">Review</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-inbox display-6 d-block mb-2"></i>No incidents have been submitted yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% else %}
+<section class="card border-0 shadow-sm">
+    <div class="card-header border-0 bg-white px-4 pt-4 pb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div><h2 class="h5 fw-bold mb-1">Your completed inspections</h2><p class="text-muted small mb-0">Incident eligibility always uses the original saved model result.</p></div>
+        <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">{{ inspections|length }} records</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase">
+                <tr><th class="ps-4">Inspection</th><th>Product</th><th>Original model result</th><th>Human review</th><th>Model / date</th><th class="text-end pe-4">Incident</th></tr>
+            </thead>
+            <tbody>
+                {% for inspection in inspections %}
+                <tr>
+                    <td class="ps-4"><a href="{% url 'inspections:detail' pk=inspection.id %}" class="fw-semibold text-decoration-none">Inspection #{{ inspection.id }}</a><div class="small text-muted text-truncate" style="max-width: 190px">{{ inspection.original_filename }}</div></td>
+                    <td><span class="badge bg-light text-dark border">{{ inspection.product.product_id }}</span>{% if inspection.batch %}<div class="small text-muted">Batch {{ inspection.batch.batch_id|stringformat:".8s" }}</div>{% endif %}</td>
+                    <td>{% if inspection.original_predicted_class == 'Defective' %}<span class="badge rounded-pill bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Defective</span>{% else %}<span class="badge rounded-pill bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Normal</span>{% endif %}</td>
+                    <td><span class="small">{{ inspection.get_review_status_display }}</span>{% if inspection.reviewed_class %}<div class="small text-muted">Human result: {{ inspection.reviewed_class }}</div>{% endif %}</td>
+                    <td><span class="small">{{ inspection.model_version|default:"Not recorded" }}</span><div class="small text-muted">{{ inspection.created_at|date:"M j, Y H:i" }}</div></td>
+                    <td class="text-end pe-4">
+                        {% if inspection.quality_incident %}
+                            <a href="{% url 'incidents:detail' incident_id=inspection.quality_incident.incident_id %}" class="btn btn-outline-primary btn-sm">Open incident</a>
+                        {% elif inspection.original_predicted_class == 'Defective' %}
+                            <form method="post" action="{% url 'incidents:create' inspection_id=inspection.id %}">{% csrf_token %}<button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Create incident</button></form>
+                        {% else %}
+                            <span class="small text-muted">Not eligible</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-camera display-6 d-block mb-2"></i>No completed inspections yet. Finish an inspection to see it here.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="px-4 py-3 small text-muted border-top"><i class="bi bi-info-circle me-1 text-primary"></i>A human correction does not change whether an original Defective prediction is eligible for an incident.</div>
+</section>
+{% endif %}
+{% endblock %}

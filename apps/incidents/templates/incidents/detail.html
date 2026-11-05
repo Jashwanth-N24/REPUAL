@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Incident {{ incident.incident_id|stringformat:".8s" }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4 pb-3 border-bottom">
+    <div>
+        <a href="{% url 'incidents:list' %}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Quality incidents</a>
+        <h1 class="h2 fw-bold mt-2 mb-1">Quality incident <span class="text-muted font-mono">#{{ incident.incident_id|stringformat:".8s" }}</span></h1>
+        <p class="text-muted mb-0">Saved from inspection #{{ incident.inspection_id }} · Created {{ incident.created_at|date:"M j, Y H:i" }}</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <span class="badge rounded-pill {% if incident.evidence_status == 'Sufficient' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-dark{% endif %} px-3 py-2">{{ incident.evidence_status }} evidence</span>
+        {% if incident.workflow_status == 'manual_review_required' %}<span class="badge rounded-pill bg-warning text-dark px-3 py-2">Manual review required</span>{% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <section class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-2 mb-3"><span class="section-icon"><i class="bi bi-file-earmark-check"></i></span><h2 class="h5 fw-bold mb-0">Incident summary</h2></div>
+                <p class="mb-0 lh-lg">{{ incident.summary }}</p>
+                {% if incident.evidence_reason %}<div class="alert alert-warning mt-3 mb-0"><strong>Manual review:</strong> {{ incident.evidence_reason }}</div>{% endif %}
+            </div>
+        </section>
+
+        <section class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2"><div class="d-flex align-items-center gap-2"><span class="section-icon"><i class="bi bi-list-check"></i></span><div><h2 class="h5 fw-bold mb-1">Suggested next steps</h2><p class="small text-muted mb-0">Each item is extracted from an allowed product SOP and links to its source page.</p></div></div></div>
+            <div class="card-body px-4 pt-3">
+                {% for action in incident.actions %}
+                <article class="action-item mb-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <span class="action-number">{{ forloop.counter }}</span>
+                        <div class="flex-grow-1">
+                            <p class="fw-semibold mb-2">{{ action.action_text }}</p>
+                            <div class="citation-card">
+                                <div class="d-flex flex-wrap align-items-center gap-2 small mb-2">
+                                    <span class="badge bg-primary-subtle text-primary">{{ action.source_document_id }}</span>
+                                    <span class="text-muted">Revision {{ action.revision }}</span>
+                                    <span class="text-muted">Page {{ action.pdf_page }}</span>
+                                    <a href="{{ action.source_link }}" target="_blank" rel="noopener" class="ms-auto text-decoration-none">Open SOP page <i class="bi bi-box-arrow-up-right ms-1"></i></a>
+                                </div>
+                                <p class="small text-muted mb-0">“{{ action.supporting_passage }}”</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="empty-evidence p-4 text-center"><i class="bi bi-journal-text display-6 text-secondary"></i><p class="fw-semibold mt-2 mb-1">No suggested actions are available</p><p class="text-muted small mb-0">The mapped SOP evidence is incomplete. A Supervisor must review the record manually.</p></div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <section class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2"><h2 class="h5 fw-bold mb-0">Saved inspection</h2></div>
+            <div class="card-body px-4 pt-2">
+                <dl class="incident-meta mb-3">
+                    <div><dt>Inspection</dt><dd><a href="{% url 'inspections:detail' pk=incident.inspection_id %}">#{{ incident.inspection_id }} · View record</a></dd></div>
+                    <div><dt>Product</dt><dd>{{ incident.product_id_snapshot }}</dd></div>
+                    <div><dt>Original model result</dt><dd><span class="badge bg-danger-subtle text-danger">{{ incident.original_model_result }}</span></dd></div>
+                    <div><dt>Model version</dt><dd>{{ incident.model_version|default:"Not recorded" }}</dd></div>
+                    <div><dt>Confidence</dt><dd>{% if incident.inspection.confidence is not None %}{{ incident.inspection.confidence|floatformat:2 }}{% else %}Not recorded{% endif %}</dd></div>
+                    <div><dt>Submitted by</dt><dd>{{ incident.inspection.submitter.username }}</dd></div>
+                </dl>
+                <div class="round2-review-box">
+                    <div class="small fw-bold mb-1"><i class="bi bi-person-check me-1"></i>Round 2 human review</div>
+                    <div class="small">{{ incident.inspection.get_review_status_display }}{% if incident.inspection.reviewed_class %} · {{ incident.inspection.reviewed_class }}{% endif %}</div>
+                    {% if incident.inspection.review_comment %}<p class="small text-muted mb-0 mt-1">{{ incident.inspection.review_comment }}</p>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="card border-0 shadow-sm review-panel">
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2"><div class="d-flex justify-content-between align-items-center"><h2 class="h5 fw-bold mb-0">Supervisor review</h2><span class="badge rounded-pill bg-light text-dark border">{{ incident.review_status }}</span></div></div>
+            <div class="card-body px-4 pt-2">
+                {% if incident.reviewer %}<p class="small text-muted mb-3">Reviewed by <strong>{{ incident.reviewer.username }}</strong>{% if incident.reviewed_at %} · {{ incident.reviewed_at|date:"M j, Y H:i" }}{% endif %}</p>{% endif %}
+                {% if incident.review_comment %}<blockquote class="review-comment">“{{ incident.review_comment }}”</blockquote>{% endif %}
+                {% if can_review %}
+                    <form method="post" action="{% url 'incidents:review' incident_id=incident.incident_id %}">
+                        {% csrf_token %}
+                        <label for="decision" class="form-label fw-semibold small">Decision</label>
+                        <select id="decision" name="decision" class="form-select mb-3" required>
+                            {% if incident.evidence_status == 'Sufficient' %}<option value="Approved for follow-up">Approved for follow-up</option>{% endif %}
+                            <option value="Needs more information">Needs more information</option>
+                        </select>
+                        <label for="comment" class="form-label fw-semibold small">Comment <span class="text-danger">required</span></label>
+                        <textarea id="comment" name="comment" class="form-control mb-3" rows="4" placeholder="Explain the decision or identify what is missing." required></textarea>
+                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check2-circle me-1"></i>Save review</button>
+                    </form>
+                    {% if incident.evidence_status == 'Insufficient' %}<p class="small text-muted mt-3 mb-0">Approval is disabled while evidence is insufficient.</p>{% else %}<p class="small text-muted mt-3 mb-0">Approval allows follow-up only. It does not approve product release.</p>{% endif %}
+                {% else %}
+                    <p class="small text-muted mb-0"><i class="bi bi-lock me-1"></i>Read-only for Engineers. A Supervisor records the decision and required comment.</p>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
